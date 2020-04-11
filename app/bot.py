@@ -24,42 +24,32 @@ word_ru = json.load(open('word_ru.json', 'r'))
 
 global_state = {}
 
-state_init = {
-    'state': 1,
-    'picks': '',
-    'timestamp': None,
-    'current_word': '',
-    'language': '',
-    'points': {
-    },
-}
-
 @bot.event
 async def on_ready():
     print('ready')
 
 @bot.event
-async def on_message(msg):   
-    print(msg.guild.name)
-    if msg.content.startswith('%'):
-        await bot.process_commands(msg)
-        return
-    if not msg.guild.name in global_state:
-        return
-    if global_state[msg.guild.name]['state'] == 0:
-        return
-    if msg.content.lower() == global_state[msg.guild.name]['current_word'].lower() and msg.author.name != global_state[msg.guild.name]['picks']:
-        global_state[msg.guild.name]['state'] = 0
-        global_state[msg.guild.name]['picks'] = ''
-        global_state[msg.guild.name]['timestamp'] = datetime.datetime.now().timestamp()
-        global_state[msg.guild.name]['current_word'] = ''
-        if msg.author.name in global_state[msg.guild.name]['points']:
-            global_state[msg.guild.name]['points'][msg.author.name] += 1
-        else:
-            global_state[msg.guild.name]['points'][msg.author.name] = 1
-        await msg.channel.send('correct, pick host')
+async def on_message(msg):
+    print(msg.content)
     print(global_state)
-
+    if str(msg.channel.type) != 'private' and msg.author.name != 'kpokoguJI':
+        if msg.content.startswith('%'):
+            await bot.process_commands(msg)
+            return
+        if not msg.guild.name in global_state:
+            return
+        if global_state[msg.guild.name]['state'] == 0:
+            return
+        if msg.content.lower() == global_state[msg.guild.name]['current_word'].lower() and msg.author.name != global_state[msg.guild.name]['picks']:
+            global_state[msg.guild.name]['state'] = 0
+            global_state[msg.guild.name]['picks'] = ''
+            global_state[msg.guild.name]['timestamp'] = datetime.datetime.now().timestamp()
+            global_state[msg.guild.name]['current_word'] = ''
+            if msg.author.name in global_state[msg.guild.name]['points']:
+                global_state[msg.guild.name]['points'][msg.author.name] += 1
+            else:
+                global_state[msg.guild.name]['points'][msg.author.name] = 1
+            await msg.channel.send('correct, pick host')
 
 @bot.command(name='rating')
 async def rating(ctx):  
@@ -88,16 +78,22 @@ async def next(ctx):
     else:
         word = random.choice(word_en)
     state['current_word'] = word
-    state['timestamp'] = datetime.datetime.now()
+    state['timestamp'] = datetime.datetime.now().timestamp()
     await ctx.message.author.create_dm()
     await ctx.message.author.dm_channel.send(f'current word is {word}')
-    print(state)
+    print(f'{ctx.message.guild.name} {state}')
 
 @bot.command(name='start_en')
 async def start_en(ctx): 
-    print(ctx.message.guild.name)
     if not ctx.message.guild.name in global_state:
-        global_state[ctx.message.guild.name] = state_init
+        global_state[ctx.message.guild.name] = {
+                'state': 1,
+                'picks': '',
+                'timestamp': None,
+                'current_word': '',
+                'language': '',
+                'points': {}
+                }
     if global_state[ctx.message.guild.name]['timestamp'] != None and datetime.datetime.now().timestamp() - global_state[ctx.message.guild.name]['timestamp'] < 300:
         await ctx.send('wait 5 mins')
         return 
@@ -109,12 +105,19 @@ async def start_en(ctx):
     await ctx.message.author.create_dm()
     await ctx.message.author.dm_channel.send(f'current word is {state["current_word"]}')
     await ctx.send(f'game is started, host is {state["picks"]}')
-    print(state)
+    print(f'{ctx.message.guild.name} {state}')
 
 @bot.command(name='start_ru')
 async def start_ru(ctx):
     if not ctx.message.guild.name in global_state:
-        global_state[ctx.message.guild.name] = state_init
+        global_state[ctx.message.guild.name] = {
+                'state': 1,
+                'picks': '',
+                'timestamp': None,
+                'current_word': '',
+                'language': '',
+                'points': {}
+                }
     if global_state[ctx.message.guild.name]['timestamp'] != None and datetime.datetime.now().timestamp() - global_state[ctx.message.guild.name]['timestamp'] < 300:
         await ctx.send('wait 5 mins')
         return 
@@ -126,7 +129,7 @@ async def start_ru(ctx):
     await ctx.message.author.create_dm()
     await ctx.message.author.dm_channel.send(f'current word is {state["current_word"]}')
     await ctx.send(f'game is started, host is {state["picks"]}')
-    print(state)
+    print(f'{ctx.message.guild.name} {state}')
 
 @bot.command(name='host')
 async def host(ctx):
@@ -149,6 +152,6 @@ async def host(ctx):
     await ctx.message.author.create_dm()
     await ctx.message.author.dm_channel.send(f'current word is {state["current_word"]}')
     await ctx.send(f'host is {state["picks"]}')
-    print(state)
+    print(f'{ctx.message.guild.name} {state}')
 
 bot.run(TOKEN)
